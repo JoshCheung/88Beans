@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/hayes_valley"
+            android:icon="@drawable/coffeebean"
+            android:title="@string/hayes_valley" />
+        <item
+            android:id="@+id/blend"
+            android:icon="@drawable/coffeebean"
+            android:title="@string/blend" />
+        <item
+            android:id="@+id/soe"
+            android:icon="@drawable/coffeebean"
+            android:title="@string/soe" />
+        <item
+            android:id="@+id/decaf"
+            android:icon="@drawable/coffeebean"
+            android:title="@string/decaf" />
+        <item
+            android:id="@+id/sod"
+            android:icon="@drawable/coffeebean"
+            android:title="@string/sod" />
+    </group>
+
+
+</menu>

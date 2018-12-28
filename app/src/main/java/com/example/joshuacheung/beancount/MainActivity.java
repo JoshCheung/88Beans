@@ -17,6 +17,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 
 import android.app.Dialog;
@@ -48,13 +50,12 @@ import java.util.List;
 import java.util.Locale;
 
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MAINACTIVITY";
     public static ArrayList<CoffeeElement> listData = new ArrayList<>();
     String [] testList = {"Hayes Valley", "Blend", "Single Origin Espresso", "Decaf", "Single Origin Drip"};
-
+    ArrayList <String> mNames = new ArrayList<>();
     ArrayAdapter<CoffeeElement> adapter = null;
     DatabaseHelper mDatabasehelper;
 
@@ -97,7 +98,7 @@ public class MainActivity extends AppCompatActivity
             TextView cups = itemView.findViewById(R.id.cups_served);
             TextView weight = itemView.findViewById(R.id.weight_output);
             title.setText(listData.get(position).getName());
-            date.setText(listData.get(position).getDate());
+//            date.setText(listData.get(position).getDate());
             cups.setText(listData.get(position).getCupsSold() + "");
             weight.setText(listData.get(position).getWeight() + "");
 
@@ -175,6 +176,23 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void getNames() {
+        mNames.add("Home");
+        mNames.add("Hayes Valley");
+        mNames.add("Blend");
+        mNames.add("Single Origin Espresso");
+        mNames.add("Decaf");
+        mNames.add("Single Origin Drip");
+    }
+
+    private void initRecyclerView() {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(layoutManager);
+        RecyclerViewAdapter adapter = new RecyclerViewAdapter(this, mNames);
+        recyclerView.setAdapter(adapter);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -182,15 +200,9 @@ public class MainActivity extends AppCompatActivity
         mDatabasehelper = new DatabaseHelper(this);
         adapter = new ListAdapter();
 //        pushSomeData();
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.app_bar_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -198,39 +210,21 @@ public class MainActivity extends AppCompatActivity
                 addCoffeeItem(view);
             }
         });
-
-        FloatingActionButton upload = findViewById(R.id.upload);
-        upload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mDatabasehelper.deleteAll();
-                toastMessage("Upload button was pressed");
-            }
-        });
-
-        FloatingActionButton listing = findViewById(R.id.fab2);
-        listing.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, DataListing.class);
-                startActivity(intent);
-//                toastMessage("LIST ALL DATA");
-            }
-        });
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
         setDate();
         todayEntry();
+        getNames();
+        initRecyclerView();
     }
 
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
+//    @Override
+//    public void onBackPressed() {
+//         super.onBackPressed();
+//    }
+
+    public void allData(View view) {
+        Intent intent = new Intent(MainActivity.this, DataListing.class);
+        intent.putExtra("type", "88 Beans");
+        startActivity(intent);
     }
 
     // Allows user to add type of Coffee bean to track
@@ -306,7 +300,7 @@ public class MainActivity extends AppCompatActivity
                     int cups = Integer.parseInt(cupsSold.getText().toString());
                     double weight = Double.parseDouble(weightOutput.getText().toString());
                     String dbTime = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(now);
-//                    listData.add(new CoffeeElement(setDate(), cups, weight, name));
+                    listData.add(0, new CoffeeElement(setDate(), cups, weight, name));
                     AddData(setDate(), cups, weight, name);
                     adapter.notifyDataSetChanged();
                     dialog.dismiss();
@@ -333,7 +327,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void pushSomeData() {
-//
         AddData("Friday, 04-06-2018", 3000, 30, "Hayes Valley");
         AddData("Saturday, 10-20-2018", 100, 900, "Hayes Valley");
         AddData("Sunday, 10-21-2018", 100, 123, "Hayes Valley");
@@ -457,11 +450,9 @@ public class MainActivity extends AppCompatActivity
     public void todayEntry() {
         ListView list = (ListView) findViewById(R.id.coffeeListView);
         list.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
 
         Cursor data = mDatabasehelper.getData();
         if (data.getCount() == 0) {
-//            display("Error", "No data found");
             return;
         }
         TextView date = findViewById(R.id.date);
@@ -478,6 +469,7 @@ public class MainActivity extends AppCompatActivity
                 continue;
             }
         }
+        adapter.notifyDataSetChanged();
     }
 
     public void display(String title, String message){
@@ -534,45 +526,4 @@ public class MainActivity extends AppCompatActivity
         return day +",  " + time;
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.hayes_valley) {
-            Intent table = new Intent(this, FillTable.class);
-            table.putExtra("title", CoffeeTypes.HAYES.getName());
-            table.putExtra("factor", CoffeeTypes.HAYES.getFactor());
-            startActivity(table);
-
-        } else if (id == R.id.blend) {
-            Intent table = new Intent(this, FillTable.class);
-            table.putExtra("title", CoffeeTypes.BLEND.getName());
-            table.putExtra("factor", CoffeeTypes.BLEND.getFactor());
-            startActivity(table);
-
-        } else if (id == R.id.soe) {
-            Intent table = new Intent(this, FillTable.class);
-            table.putExtra("title", CoffeeTypes.SOE.getName());
-            table.putExtra("factor", CoffeeTypes.SOE.getFactor());
-            startActivity(table);
-
-        } else if (id == R.id.decaf) {
-            Intent table = new Intent(this, FillTable.class);
-            table.putExtra("title", CoffeeTypes.DECAF.getName());
-            table.putExtra("factor", CoffeeTypes.DECAF.getFactor());
-            startActivity(table);
-
-        } else if (id == R.id.sod) {
-            Intent table = new Intent(this, FillTable.class);
-            table.putExtra("title", CoffeeTypes.SOD.getName());
-            table.putExtra("factor", CoffeeTypes.SOD.getFactor());
-            startActivity(table);
-        }
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
 }

@@ -2,6 +2,8 @@ package com.example.joshuacheung.beancount;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.SortedMap;
+
 import android.content.Context;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
@@ -14,10 +16,10 @@ public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
 
     private Context context;
     private List<String> expandableListTitle;
-    private HashMap<String, List<String>> expandableListDetail;
+    private SortedMap<String, List<CoffeeElement>> expandableListDetail;
 
     public CustomExpandableListAdapter(Context context, List<String> expandableListTitle,
-                                       HashMap<String, List<String>> expandableListDetail) {
+                                       SortedMap<String, List<CoffeeElement>> expandableListDetail) {
         this.context = context;
         this.expandableListTitle = expandableListTitle;
         this.expandableListDetail = expandableListDetail;
@@ -37,15 +39,22 @@ public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
     @Override
     public View getChildView(int listPosition, final int expandedListPosition,
                              boolean isLastChild, View convertView, ViewGroup parent) {
-        final String expandedListText = (String) getChild(listPosition, expandedListPosition);
+        CoffeeElement expandedListText = (CoffeeElement) getChild(listPosition, expandedListPosition);
         if (convertView == null) {
             LayoutInflater layoutInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = layoutInflater.inflate(R.layout.list_item, null);
+            convertView = layoutInflater.inflate(R.layout.main_coffee_element, null);
         }
-        TextView expandedListTextView = (TextView) convertView
-                .findViewById(R.id.expandedListItem);
-        expandedListTextView.setText(expandedListText);
+        TextView coffeeTitle = (TextView) convertView.findViewById(R.id.coffeeTitle);
+
+        TextView cups = (TextView) convertView.findViewById(R.id.cups_served);
+
+        TextView weight = (TextView) convertView.findViewById(R.id.weight_output);
+
+        coffeeTitle.setText(expandedListText.getName());
+        cups.setText(String.format("%d", expandedListText.getCupsSold()));
+        weight.setText(String.format("%.2f lb", expandedListText.getWeight()));
+
         return convertView;
     }
 

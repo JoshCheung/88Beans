@@ -20,75 +20,115 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class DataListing extends AppCompatActivity {
 
-    public static final String TAG = "DATA LISTING";
+    public static final String TAG = "DATA_LISTING";
     DatabaseHelper mDatabasehelper;
     ArrayAdapter<CoffeeElement> adapter = null;
     ArrayList<CoffeeElement> dataList = new ArrayList<>();
     ExpandableListView expandableListView;
     ExpandableListAdapter expandableListAdapter;
     List<String> expandableListTitle;
-    HashMap<String, List<String>> expandableListDetail;
-
+    SortedMap<String, List<CoffeeElement>> expandableListDetail;
+    public static String title = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mDatabasehelper = new DatabaseHelper(this);
-        adapter = new DataListing.ListAdapter();
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.expandable_listview);
+        Intent intent = getIntent();
+        title = intent.getStringExtra("type");
+        if (!title.equals("88 Beans")) {
+            setContentView(R.layout.data_listing);
+            adapter = new DataListing.ListAdapter();
+            displayData(title);
+        }
+        else {
+            setContentView(R.layout.expandable_listview);
 
-        expandableListView = (ExpandableListView) findViewById(R.id.expandableListView);
-        expandableListDetail = ExpandableListDataPump.getData();
-        expandableListTitle = new ArrayList<String>(expandableListDetail.keySet());
-        expandableListAdapter = new CustomExpandableListAdapter(this, expandableListTitle, expandableListDetail);
-        expandableListView.setAdapter(expandableListAdapter);
-        expandableListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+            expandableListView = (ExpandableListView) findViewById(R.id.expandableListView);
+            expandableListDetail = getData();
+            expandableListTitle = new ArrayList<String>(expandableListDetail.keySet());
+            expandableListAdapter = new CustomExpandableListAdapter(this, expandableListTitle, expandableListDetail);
+            expandableListView.setAdapter(expandableListAdapter);
+            expandableListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
 
-            @Override
-            public void onGroupExpand(int groupPosition) {
-                Toast.makeText(getApplicationContext(),
-                        expandableListTitle.get(groupPosition) + " List Expanded.",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+                @Override
+                public void onGroupExpand(int groupPosition) {
+                    Toast.makeText(getApplicationContext(),
+                            expandableListTitle.get(groupPosition) + " List Expanded.",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
 
-        expandableListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+            expandableListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
 
-            @Override
-            public void onGroupCollapse(int groupPosition) {
-                Toast.makeText(getApplicationContext(),
-                        expandableListTitle.get(groupPosition) + " List Collapsed.",
-                        Toast.LENGTH_SHORT).show();
+                @Override
+                public void onGroupCollapse(int groupPosition) {
+                    Toast.makeText(getApplicationContext(),
+                            expandableListTitle.get(groupPosition) + " List Collapsed.",
+                            Toast.LENGTH_SHORT).show();
 
-            }
-        });
+                }
+            });
 
-        expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
-            @Override
-            public boolean onChildClick(ExpandableListView parent, View v,
-                                        int groupPosition, int childPosition, long id) {
-                Toast.makeText(
-                        getApplicationContext(),
-                        expandableListTitle.get(groupPosition)
-                                + " -> "
-                                + expandableListDetail.get(
-                                expandableListTitle.get(groupPosition)).get(
-                                childPosition), Toast.LENGTH_SHORT
-                ).show();
-                return false;
-            }
-        });
+            expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+                @Override
+                public boolean onChildClick(ExpandableListView parent, View v,
+                                            int groupPosition, int childPosition, long id) {
 
-//        displayData();
+                    final Dialog dialog = new Dialog(DataListing.this);
+                    dialog.setContentView(R.layout.edit_or_delete_instance);
+                    dialog.show();
+//                    Toast.makeText(
+//                            getApplicationContext(),
+//                            expandableListTitle.get(groupPosition)
+//                                    + " -> "
+//                                    + expandableListDetail.get(
+//                                    expandableListTitle.get(groupPosition)).get(
+//                                    childPosition), Toast.LENGTH_SHORT
+//                    ).show();
+                    return false;
+                }
+            });
+        }
+
     }
 
+    public SortedMap<String, List<CoffeeElement>> getData() {
+        SortedMap<String, List<CoffeeElement>> expandableListDetail = new TreeMap<>(Collections.reverseOrder());
+        List<CoffeeElement> days = new ArrayList<>();
+        Cursor data = mDatabasehelper.getData();
+        if (data.getCount() == 0) {
+            return null;
+        }
 
+        while (data.moveToNext()) {
+            String preDate = data.getString(1);
+            String convertDate = preDate.substring(preDate
+                    .lastIndexOf(" ")).replace(" ", "");
+            String [] convert = convertDate.split("-");
+            String date = convert[2] + "-" + convert[0] + "-" + convert[1];
 
+            if (!expandableListDetail.containsKey(date)) {
+                expandableListDetail.put(date, new ArrayList<>());
+                expandableListDetail.get(date).add(new CoffeeElement(data.getString(1), Integer.parseInt(data.getString(2)),
+                        Double.parseDouble(data.getString(3)), data.getString(4)));
+            }
+            else {
+                expandableListDetail.get(date).add(new CoffeeElement(data.getString(1), Integer.parseInt(data.getString(2)),
+                        Double.parseDouble(data.getString(3)), data.getString(4)));
+            }
+        }
+        return expandableListDetail;
+    }
 
 
     private class ListAdapter extends ArrayAdapter<CoffeeElement> {
@@ -186,10 +226,9 @@ public class DataListing extends AppCompatActivity {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    public void displayData() {
-        TextView title = findViewById(R.id.dataListTitle);
-//        dataList.stream().forEach(x->Log.d(TAG, x.toString()));
-        title.setText("List Data");
+    public void displayData(String title) {
+        TextView listings = findViewById(R.id.dataListTitle);
+        listings.setText(title + ": All Entries");
         ListView list = (ListView) findViewById(R.id.dataListView);
         list.setAdapter(adapter);
         adapter.notifyDataSetChanged();
@@ -198,9 +237,10 @@ public class DataListing extends AppCompatActivity {
             return;
         }
         while (data.moveToNext()) {
-            dataList.add(0, new CoffeeElement(data.getString(1), Integer.parseInt(data.getString(2)),
-                    Double.parseDouble(data.getString(3)), data.getString(4)));
-
+            if (data.getString(4).equals(title)) {
+                dataList.add(0, new CoffeeElement(data.getString(1), Integer.parseInt(data.getString(2)),
+                        Double.parseDouble(data.getString(3)), data.getString(4)));
+            }
         }
     }
 }

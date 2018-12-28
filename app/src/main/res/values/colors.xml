@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--<color name="colorPrimary">#01a1dd</color>-->
-    <color name="colorPrimary">#5C3309</color>
+    <!--<color name="colorPrimary">#5C3309</color>-->
+    <color name="colorPrimary">#703e0b</color>
     <color name="colorPrimaryDark">#3e2307</color>
     <!--<color name="colorPrimaryDark">#007faf</color>-->
     <!--<color name="colorAccent">#01a1dd</color>-->
-    <color name="colorAccent">#5C3309</color>
+    <color name="colorAccent">#703e0b</color>
     <color name="grayTone">#e0e0e0</color>
+    <color name="graphBackground">#f2f2f2</color>
     <color name="transparent">#00e0e0e0</color>
+    <color name="selectedTab">#5C3309</color>
 </resources>

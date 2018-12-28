@@ -15,11 +15,64 @@
         android:orientation="vertical">
 
 
-        <pl.droidsonroids.gif.GifImageView
+        <!--<pl.droidsonroids.gif.GifImageView-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="260dp"-->
+            <!--android:layout_marginTop="-5dp"-->
+            <!--android:src="@drawable/coffee" />-->
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="260dp"
-            android:layout_marginTop="-5dp"
-            android:src="@drawable/coffee" />
+            android:layout_height="65dp"
+            android:orientation="horizontal"></android.support.v7.widget.RecyclerView>
+
+        <View
+            android:id="@+id/view2"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/colorAccent" />
+
+        <ListView
+            android:id="@+id/small_data"
+            android:layout_width="match_parent"
+            android:layout_height="225dp"
+            android:background="@color/graphBackground" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="20dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/button6"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="7dp"
+                android:layout_weight="1"
+                android:background="@drawable/rounded_button"
+                android:text="@string/stats"
+                android:textAppearance="@style/TextAppearance.AppCompat.Inverse"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/data_listing"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="7dp"
+                android:layout_weight="1"
+                android:background="@drawable/rounded_button"
+                android:onClick="allData"
+                android:text="@string/allEntries"
+                android:textAppearance="@style/TextAppearance.AppCompat.Inverse"
+                android:textSize="18sp" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/date"

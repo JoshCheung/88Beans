@@ -31,8 +31,8 @@
             android:label=""></activity>
 
         <activity
-            android:name=".DataListing"
-            android:label=""></activity>
+            android:name=".DataListing">
+        </activity>
     </application>
 
     <uses-permission android:name="android.permission.VIBRATE"></uses-permission>

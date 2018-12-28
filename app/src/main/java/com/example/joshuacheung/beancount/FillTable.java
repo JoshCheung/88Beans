@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.content.Intent;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import android.view.View;
@@ -46,6 +48,8 @@ public class FillTable extends AppCompatActivity {
     public ArrayList <CoffeeElement> coffeeData = new ArrayList<>();
 
     public HashMap <String, ArrayList> weeks = new HashMap<>();
+
+    public ArrayList<String> mNames = new ArrayList<>();
 
     // Plot data points
     public LineGraphSeries<DataPoint> series1;
@@ -97,6 +101,25 @@ public class FillTable extends AppCompatActivity {
         fillWeeklyTable(weekIndex, title);
         graphWeek(weekIndex, title);
         pastYearToDate();
+        getNames();
+        initRecyclerView();
+    }
+
+    public void getNames() {
+        mNames.add("Home");
+        mNames.add("Hayes Valley");
+        mNames.add("Blend");
+        mNames.add("Single Origin Espresso");
+        mNames.add("Decaf");
+        mNames.add("Single Origin Drip");
+    }
+
+    private void initRecyclerView() {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(layoutManager);
+        RecyclerViewAdapter adapter = new RecyclerViewAdapter(this, mNames);
+        recyclerView.setAdapter(adapter);
     }
 
     /*
@@ -443,6 +466,12 @@ public class FillTable extends AppCompatActivity {
             graphWeek(weekIndex, title);
 
         }
+    }
+
+    public void showEntries(View view) {
+        Intent showEntries = new Intent(this, DataListing.class);
+        showEntries.putExtra("type", getTitle());
+        startActivity(showEntries);
     }
 
     /*

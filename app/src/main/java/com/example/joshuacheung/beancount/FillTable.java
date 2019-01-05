@@ -2,6 +2,7 @@ package com.example.joshuacheung.beancount;
 
 import android.database.Cursor;
 import android.graphics.Color;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.content.Intent;
@@ -31,10 +32,12 @@ import java.time.temporal.TemporalAdjusters;
 
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class FillTable extends AppCompatActivity {
 
@@ -54,13 +57,15 @@ public class FillTable extends AppCompatActivity {
     // Plot data points
     public LineGraphSeries<DataPoint> series1;
 
+    public static double weeklyAverage = 0.0;
+
     // Store the dates of each week
     public ArrayList<String> dates = new ArrayList<>();
 
     // determines what week is being looked at
     public static int weekIndex;
 
-    private class DateWeightPair {
+    private static class DateWeightPair {
 
         private String date;
         private String name;
@@ -71,6 +76,7 @@ public class FillTable extends AppCompatActivity {
             this.date = date;
             this.weight = weight;
         }
+
         public String getName() {
             return name;
         }
@@ -86,12 +92,32 @@ public class FillTable extends AppCompatActivity {
         public String toString() {
             return getName() + ", " + getDate() + ": " + getWeight();
         }
+
+
+        public static Comparator<DateWeightPair> DateComparison = new Comparator<DateWeightPair>() {
+
+            public int compare(DateWeightPair d1, DateWeightPair d2) {
+                String date1 = d1.getDate().toUpperCase();
+                String date2 = d2.getDate().toUpperCase();
+
+//              descending order
+                return date2.compareTo(date1);
+            }
+        };
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.page_layout);
+        FloatingActionButton homeButton = findViewById(R.id.home_button);
+        homeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent myIntent = new Intent(FillTable.this, MainActivity.class);
+                startActivity(myIntent);
+            }
+        });
         mDatabasehelper = new DatabaseHelper(this);
         Intent intent = getIntent();
         title = intent.getStringExtra("title");
@@ -106,7 +132,6 @@ public class FillTable extends AppCompatActivity {
     }
 
     public void getNames() {
-        mNames.add("Home");
         mNames.add("Hayes Valley");
         mNames.add("Blend");
         mNames.add("Single Origin Espresso");
@@ -217,7 +242,8 @@ public class FillTable extends AppCompatActivity {
         series1 = new LineGraphSeries<>();
 
         ArrayList<DateWeightPair> pastMonth = getPastMonths(num);
-        try {
+        Collections.reverse(pastMonth);
+//        try {
             // Loop through and initialize all data points
             for (int i = pastMonth.size()-1; i >= 0 ; i--) {
                 String date = convertDisplayDateToLocalDate(pastMonth.get(i).getDate());
@@ -232,7 +258,7 @@ public class FillTable extends AppCompatActivity {
             String start = convertDisplayDateToLocalDate(pastMonth.get(0).getDate());
             Date date2 = new SimpleDateFormat("yyyy-MM-dd").parse(start);
 
-            // Getting endding date
+            // Getting ending date
             int size = pastMonth.size()-1;
             String end = convertDisplayDateToLocalDate(pastMonth.get(size).getDate());
             Date date1 = new SimpleDateFormat("yyyy-MM-dd").parse(end);
@@ -267,10 +293,10 @@ public class FillTable extends AppCompatActivity {
                 }
             });
             graph.addSeries(series1);
-        }
-        catch (Exception e) {
-            toastMessage("No Data available");
-        }
+//        }
+//        catch (Exception e) {
+//            toastMessage("No Data available");
+//        }
     }
 
 
@@ -378,8 +404,8 @@ public class FillTable extends AppCompatActivity {
                     .with(TemporalAdjusters.nextOrSame( DayOfWeek.SUNDAY ) ) ;
 
             // Create a String as a key for the dates
-            String displayMon = convertDateText(monday.toString());
-            String displaySun = convertDateText(sunday.toString());
+//            String displayMon = convertDateText(monday.toString());
+//            String displaySun = convertDateText(sunday.toString());
             String key = monday.toString()  + " to " + sunday.toString();
 //            String key = displayMon + " to " + displaySun;
 
@@ -400,7 +426,7 @@ public class FillTable extends AppCompatActivity {
 
         // sort the Dates list in chronological order
         Collections.sort(dates);
-        dates.stream().forEach(x -> Log.d(TAG, "DATES: " + x));
+//        dates.stream().forEach(x -> Log.d(TAG, "DATES: " + x));
     }
 
 
@@ -547,11 +573,23 @@ public class FillTable extends AppCompatActivity {
                 }
             }
             // Display the total weight used for the week
-            weightTotal.setText(weight+"lb");
+            weightTotal.setText(String.format("%.2f lb", weight));
         }
         catch (Exception e) {
             toastMessage("No Data to Display");
         }
+    }
+
+
+    public void weeklyAverages() {
+        double weight = 0.0;
+        for (String date: dates) {
+            ArrayList<DateWeightPair> pairs = weeks.get(date);
+            weight += pairs.stream().mapToDouble(x -> x.getWeight()).sum();
+        }
+        Log.d(TAG, String.valueOf(weight/dates.size()));
+        weeklyAverage = weight/dates.size();
+//        return weight/dates.size();
     }
 
 
@@ -570,7 +608,7 @@ public class FillTable extends AppCompatActivity {
         try {
             String currentWeek = dates.get(index);
             ArrayList<DateWeightPair> pairs = weeks.get(currentWeek);
-
+            Collections.sort(pairs, DateWeightPair.DateComparison);
 
             for (int i = 1; i <= pairs.size(); i++) {
                 if (pairs.get(i-1).getName().equals(title)) {

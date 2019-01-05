@@ -42,7 +42,7 @@
     <string name="Yearly">Past Year</string>
     <string name="previous">Previous</string>
     <string name="next">Next</string>
-    <string name="totalWeight">Week\'s total amount of weight:</string>
+    <string name="totalWeight">Week\'s total weight:</string>
     <string name="todo">TODO</string>
     <string name="graph">Graph</string>
     <string name="pastweek">Past Week</string>
@@ -51,4 +51,8 @@
     <string name="allEntries">All Entries</string>
     <string name="entries">Entries</string>
     <string name="bi_weekly_data">Bi-Weekly Data</string>
+    <string name="week_averages">Weekly Averages</string>
+    <string name="add">Add</string>
+    <string name="weekday_avg">Weekday Avg:</string>
+    <string name="weekend_avg">Weekend Avg:</string>
 </resources>

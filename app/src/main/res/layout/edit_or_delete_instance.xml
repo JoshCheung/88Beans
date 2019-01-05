@@ -1,47 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="400dp"
-    android:layout_height="150dp">
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/txtmessage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:padding="10dp"
-            android:textSize="18sp"/>
+        <DatePicker
+            android:id="@+id/Datepick"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/typeOfCoffeeText"
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="40dp"
-                android:layout_marginRight="40dp"
-                android:ems="10"
-                android:hint="@string/type_of_coffee"
-                android:importantForAutofill="no"
-                android:inputType="textPersonName" />
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="2dp"
+                android:layout_weight="0"
+                android:text="@string/cups"
+                android:textSize="18sp" />
 
             <EditText
-                android:id="@+id/factor"
-                android:layout_width="0dp"
+                android:id="@+id/cups_served"
+                android:layout_width="65dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="40dp"
-                android:layout_weight="1"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="0"
                 android:autofillHints=""
                 android:ems="10"
-                android:hint="@string/factor"
-                android:inputType="number"/>
+                android:inputType="number" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="2dp"
+                android:text="@string/weight"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/weight_output"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -51,29 +78,45 @@
 
             <Button
                 android:id="@+id/delete"
-                style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="40dp"
-                android:layout_marginEnd="20dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
                 android:layout_weight="1"
                 android:background="@color/grayTone"
-                android:text="@string/delete" />
+                android:text="@string/delete"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@android:color/black"
+                tools:ignore="ButtonStyle" />
 
             <Button
                 android:id="@+id/update"
-                style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
                 android:layout_weight="1"
                 android:background="@color/colorAccent"
                 android:text="@string/update"
-                android:textColor="@android:color/white" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium.Inverse"
+                android:textColor="@android:color/white"
+                tools:ignore="ButtonStyle" />
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtmessage2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:padding="10dp"
+            android:textSize="18sp"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp" />
+
     </LinearLayout>
+
 
 </android.support.constraint.ConstraintLayout>

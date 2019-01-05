@@ -1,6 +1,7 @@
 package com.example.joshuacheung.beancount;
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -46,17 +47,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         viewHolder.name.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mNames.get(i).equals("Home")) {
-
-                    Intent myIntent = new Intent(view.getContext(), MainActivity.class);
-                    mcontext.startActivity(myIntent);
-                }
-                else {
-                    Toast.makeText(mcontext, mNames.get(i), Toast.LENGTH_SHORT).show();
-                    Intent myIntent = new Intent(view.getContext(), FillTable.class);
-                    myIntent.putExtra("title", mNames.get(i));
-                    mcontext.startActivity(myIntent);
-                }
+                Toast.makeText(mcontext, mNames.get(i), Toast.LENGTH_SHORT).show();
+                Intent myIntent = new Intent(view.getContext(), FillTable.class);
+                myIntent.putExtra("title", mNames.get(i));
+                mcontext.startActivity(myIntent);
             }
         });
     }

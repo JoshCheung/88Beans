@@ -94,15 +94,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return data;
     }
 
-//    public void updateItem(String newUpdate, int id, String oldItem) {
-//        SQLiteDatabase db = this.getWritableDatabase();
-//        String query = "UPDATE " + COFFEE_TABLE + " SET " + col2 +
-//                " = '" + newUpdate + "' WHERE " + col + " = '" + id + "'" +
-//                " AND " + col2 + " = '" + oldItem + "'";
-//        Log.d(TAG, "updateItem: query: " + query);
-//        Log.d(TAG, "UpdateItem: updating " + oldItem + " from database.");
-//        db.execSQL(query);
-//    }
+    public void updateItem(int id, String oldName, String newDate, int newCups, double newWeight, String newName) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String query = "UPDATE " + COFFEE_TABLE +
+
+                    " SET " + date_col + " = '" + newDate + "'," +
+                              cups_col + " = '" + newCups + "'," +
+                            weight_col + " = '" + newWeight + "'," +
+                              name_col + " = '" + newName +
+                    "' WHERE " +
+                                id_col + " = '" + id + "'" +
+                    " AND " + name_col + " = '" + oldName + "'";
+
+        Log.d(TAG, "updateItem: query: " + query);
+        db.execSQL(query);
+    }
 
     public void deleteAll(){
         SQLiteDatabase db = this.getWritableDatabase();

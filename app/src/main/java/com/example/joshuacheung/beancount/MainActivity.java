@@ -1,10 +1,14 @@
 package com.example.joshuacheung.beancount;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.Context;
 
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 
 import android.os.Parcelable;
@@ -13,6 +17,7 @@ import android.provider.ContactsContract;
 import android.support.annotation.MainThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -25,7 +30,9 @@ import android.app.Dialog;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,19 +40,28 @@ import android.view.ViewGroup;
 
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.DatePicker;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.Button;
+import android.widget.TimePicker;
 import android.widget.Toast;
+
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -54,12 +70,12 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MAINACTIVITY";
     public static ArrayList<CoffeeElement> listData = new ArrayList<>();
-    String [] testList = {"Hayes Valley", "Blend", "Single Origin Espresso", "Decaf", "Single Origin Drip"};
-    ArrayList <String> mNames = new ArrayList<>();
+    public ArrayList <String> mNames = new ArrayList<>();
     ArrayAdapter<CoffeeElement> adapter = null;
     DatabaseHelper mDatabasehelper;
+    private DatePickerDialog.OnDateSetListener mDateSetListener;
 
-    enum CoffeeTypes{
+     enum CoffeeTypes{
         HAYES("Hayes Valley", 22),
         BLEND("Blend" ,30),
         SOE("Single Origin Espresso", 22),
@@ -83,6 +99,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public HashMap <String, ArrayList> weeks = new HashMap<>();
+
+    // Store the dates of each week
+    public ArrayList<String> dates = new ArrayList<>();
+
     private class ListAdapter extends ArrayAdapter<CoffeeElement> {
         public ListAdapter() {
             super(MainActivity.this, R.layout.main_coffee_element, R.id.coffeeListView, listData);
@@ -100,49 +121,126 @@ public class MainActivity extends AppCompatActivity {
             title.setText(listData.get(position).getName());
 //            date.setText(listData.get(position).getDate());
             cups.setText(listData.get(position).getCupsSold() + "");
-            weight.setText(listData.get(position).getWeight() + "");
+            weight.setText(String.format("%.2f lb", listData.get(position).getWeight()));
 
-            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public boolean onLongClick(View view) {
+                public void onClick(View view) {
                     Vibrator vibe = (Vibrator) MainActivity.this.getSystemService(Context.VIBRATOR_SERVICE) ;
-                    vibe.vibrate(80);
+                    vibe.vibrate(30);
                     final Dialog dialog = new Dialog(MainActivity.this);
                     dialog.setContentView(R.layout.edit_or_delete_instance);
                     Button update = dialog.findViewById(R.id.update);
                     Button delete = dialog.findViewById(R.id.delete);
-                    EditText coffeeText = dialog.findViewById(R.id.typeOfCoffeeText);
-                    EditText coffeeFactor = dialog.findViewById(R.id.factor);
-                    coffeeText.setText(listData.get(position).getName());
-                    String oldItem = listData.get(position).getName();
-                    Log.d("OLD ITEM: ", "Item Selected: " + oldItem);
-//                    coffeeFactor.setText("");
+                    Spinner spinner = (Spinner) dialog.findViewById(R.id.spinner);
+                    final DatePicker datePicker = (DatePicker) dialog.findViewById(R.id.Datepick);
+                    ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(
+                            MainActivity.this, R.layout.spinner_item, mNames);
+                    myAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinner.setAdapter(myAdapter);
+                    spinner.setSelection(mNames.indexOf(listData.get(position).getName()));
+
+                    EditText cups = (EditText) dialog.findViewById(R.id.cups_served);
+                    cups.setText(String.valueOf(listData.get(position).getCupsSold()));
+
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MM-dd-yyyy");
+                    Date oldDate = new Date();
+
+                    try{
+                        oldDate = dateFormat.parse(listData.get(position).getDate());
+                    }
+                    catch (Exception e) {
+                        toastMessage("Could not convert Date");
+                    }
+
+                    LocalDate localDate = oldDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    int year  = localDate.getYear();
+                    int month = (localDate.getMonthValue()-1);
+                    int day   = localDate.getDayOfMonth();
+
+                    datePicker.updateDate(year, month, day);
+
+                    TextView weightOutput = dialog.findViewById(R.id.weight_output);
+                    double oldWeight = listData.get(position).getWeight();
+                    weightOutput.setText(String.format(String.valueOf(oldWeight)));
+                    String oldName = listData.get(position).getName();
+
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                            for (CoffeeTypes coffeeTypes : CoffeeTypes.values()) {
+                                if (coffeeTypes.name == mNames.get(i)) {
+                                    cups.addTextChangedListener(new TextWatcher() {
+                                        @Override
+                                        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                                        }
+
+                                        @Override
+                                        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                                        }
+
+                                        @Override
+                                        public void afterTextChanged(Editable editable) {
+                                            try {
+                                                if (!cups.getText().toString().equals("") || cups.getText().toString() == null) {
+                                                    int cupsServed = Integer.parseInt(cups.getText().toString());
+                                                    String weight = calculateFactor(coffeeTypes.factor, cupsServed);
+                                                    weightOutput.setText(String.format("%s", weight));
+                                                }
+                                                else {
+                                                    weightOutput.setText("");
+                                                }
+                                            }
+                                            catch (Exception e) {
+                                                toastMessage("Number is too big");
+                                                dialog.dismiss();
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        @Override
+                        public void onNothingSelected(AdapterView<?> adapterView) {
+
+                        }
+                    });
+
+
                     update.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Cursor data = mDatabasehelper.getItemID(oldItem);
+                            Cursor data = mDatabasehelper.getItemID(oldName);
                             int itemID = -1;
                             while (data.moveToNext()) {
                                 itemID = data.getInt(0);
                             }
                             if (itemID > -1) {
                                 Log.d("Item clicked", "onItemCLick: the ID is " + itemID);
-
-                                toastMessage("Item was clicked for updating: " + itemID +", " + listData.get(position));
-
-                                if (coffeeText != null || coffeeText.getText().toString() == "" && coffeeFactor != null) {
-                                    String coffeeTitle = coffeeText.getText().toString();
-
-//                                    mDatabasehelper.updateItem(coffeeTitle, itemID, oldItem);
-//                                    listData.set(listData.get(position), coffeeTitle);
-                                    adapter.notifyDataSetChanged();
+                                toastMessage("Item was clicked for updating: " + itemID +", " + listData.get(position).toString());
+                                Date date = new Date(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth()-1);
+                                SimpleDateFormat simpledateformat = new SimpleDateFormat("EEEE");
+                                String dayOfWeek = simpledateformat.format(date);
+                                String day = "";
+                                if (datePicker.getDayOfMonth() < 10) {
+                                    day = "0" + datePicker.getDayOfMonth();
                                 }
+                                String entryDate = (dayOfWeek + ", " + datePicker.getMonth()+1)+"-"+day+"-"+datePicker.getYear();
+                                int cups_sold = Integer.parseInt(cups.getText().toString());
+                                String newName = spinner.getSelectedItem().toString();
+                                double weight = Double.parseDouble(weightOutput.getText().toString());
+                                mDatabasehelper.updateItem(itemID, oldName, entryDate, cups_sold, weight, newName);
+                                listData.set(position, new CoffeeElement(entryDate, cups_sold, weight, newName));
+                                adapter.notifyDataSetChanged();
                             } else {
                                 toastMessage("No ID associated with that name");
                             }
                             dialog.dismiss();
                         }
                     });
+
                     delete.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -168,16 +266,13 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     dialog.show();
-                    return false;
                 }
             });
-
             return itemView;
         }
     }
 
     public void getNames() {
-        mNames.add("Home");
         mNames.add("Hayes Valley");
         mNames.add("Blend");
         mNames.add("Single Origin Espresso");
@@ -210,44 +305,161 @@ public class MainActivity extends AppCompatActivity {
                 addCoffeeItem(view);
             }
         });
+
+        FloatingActionButton homeButton = findViewById(R.id.home_button);
+        homeButton.setEnabled(false);
+
         setDate();
         todayEntry();
         getNames();
         initRecyclerView();
+        weekAverages();
     }
 
-//    @Override
-//    public void onBackPressed() {
-//         super.onBackPressed();
-//    }
+    public class Averages {
+        private String name;
+        private double weekdayAverage;
+        private double weekendAverage;
+
+        public Averages(String name, double weekdayAverage, double weekendAverage) {
+            this.name = name;
+            this.weekdayAverage = weekdayAverage;
+            this.weekendAverage = weekendAverage;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public double getWeekdayAverage() {
+            return weekdayAverage;
+        }
+
+        public double getWeekendAverage() {
+            return weekendAverage;
+        }
+
+        public String toString() { return name + "Weekday Average: " + getWeekdayAverage() + ", Weekend Average: " + getWeekendAverage(); }
+    }
+
+
+
+    public void weekAverages() {
+        HashMap<String, Double> weekdayTotals = new HashMap<>();
+        HashMap<String, Double> weekendTotals = new HashMap<>();
+
+        HashMap<String, Integer> weekendCounter = new HashMap<>();
+        HashMap<String, Integer> weekdayCounter = new HashMap<>();
+
+        ArrayList<Averages> smallData = new ArrayList<>();
+
+        Cursor data = mDatabasehelper.getData();
+
+        if (data.getCount() == 0) {
+            return;
+        }
+        while (data.moveToNext()) {
+            String name = data.getString(4);
+            String date = data.getString(1);
+            double weight = Double.parseDouble(data.getString(3));
+
+            if (date.indexOf("Saturday") >= 0 || date.indexOf("Sunday") >= 0) {
+                if (!weekendTotals.containsKey(name)) {
+                    weekendTotals.put(name, weight);
+                    weekendCounter.put(name, 1);
+                }
+                else {
+                    weekendTotals.put(name, weekendTotals.get(name) + weight);
+                    weekendCounter.put(name, weekendCounter.get(name) + 1);
+                }
+            }
+            else {
+                if (!weekdayTotals.containsKey(name)) {
+                    weekdayTotals.put(name, weight);
+                    weekdayCounter.put(name, 1);
+                }
+                else {
+                    weekdayTotals.put(name, weekdayTotals.get(name) + weight);
+                    weekdayCounter.put(name, weekdayCounter.get(name) + 1);
+                }
+            }
+        }
+
+        for (String key : weekendTotals.keySet()) {
+            smallData.add(new Averages(key, weekdayTotals.get(key)/(weekdayCounter.get(key)/5), (weekendTotals.get(key))/(weekendCounter.get(key)/2)));
+        }
+
+        AverageAdapter adapter = new AverageAdapter(this, smallData);
+        ListView averages = (ListView) findViewById(R.id.small_data);
+        averages.setAdapter(adapter);
+    }
+
+    public class AverageAdapter extends ArrayAdapter<Averages> {
+        public AverageAdapter(Context context, ArrayList<Averages> averages) {
+            super(context, 0, averages);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            // Get the data item for this position
+            Averages average = getItem(position);
+            // Check if an existing view is being reused, otherwise inflate the view
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.averages_entry, parent, false);
+            }
+            // Lookup view for data population
+            TextView tvName = (TextView) convertView.findViewById(R.id.name);
+            TextView weekdayaverageTV = (TextView) convertView.findViewById(R.id.weekday_average);
+            TextView weekendaverageTV = (TextView) convertView.findViewById(R.id.weekend_average);
+
+            // Populate the data into the template view using the data object
+            tvName.setText(average.getName());
+            weekdayaverageTV.setText(String.format("%.2f lb", average.getWeekdayAverage()/5));
+            weekendaverageTV.setText(String.format("%.2f lb", average.getWeekendAverage()/2));
+            // Return the completed view to render on screen
+            return convertView;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+         super.onBackPressed();
+    }
+
 
     public void allData(View view) {
-        Intent intent = new Intent(MainActivity.this, DataListing.class);
-        intent.putExtra("type", "88 Beans");
-        startActivity(intent);
+        try {
+            Intent intent = new Intent(MainActivity.this, DataListing.class);
+            intent.putExtra("type", "88 Beans");
+            startActivity(intent);
+        }
+        catch (Exception e) {
+            toastMessage("No Data Available");
+        }
     }
 
     // Allows user to add type of Coffee bean to track
     public void addCoffeeItem(View view) {
-        Log.d("ADD ITEM: ", "HELLO");
+        // Use the current date as the default date in the picker
         final Dialog dialog = new Dialog(MainActivity.this);
         dialog.setContentView(R.layout.add_bean_type);
 
         Spinner spinner = (Spinner) dialog.findViewById(R.id.spinner);
+        final DatePicker datePicker = (DatePicker) dialog.findViewById(R.id.Datepick);
         ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(
-               MainActivity.this, android.R.layout.simple_list_item_1, testList);
+                MainActivity.this, R.layout.spinner_item, mNames);
         myAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(myAdapter);
         EditText cupsSold = dialog.findViewById(R.id.cups_served);
         TextView weightOutput = dialog.findViewById(R.id.weight_output);
-        Date now = new Date();
+
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 weightOutput.setText("");
                 cupsSold.setText("");
                 for (CoffeeTypes coffeeTypes : CoffeeTypes.values()) {
-                    if (coffeeTypes.name == testList[i]) {
+                    if (coffeeTypes.name == mNames.get(i)) {
                         cupsSold.addTextChangedListener(new TextWatcher() {
                             @Override
                             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -265,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
                                     if (!cupsSold.getText().toString().equals("") || cupsSold.getText().toString() == null) {
                                         int cupsServed = Integer.parseInt(cupsSold.getText().toString());
                                         String weight = calculateFactor(coffeeTypes.factor, cupsServed);
-                                        weightOutput.setText(weight);
+                                        weightOutput.setText(String.format("%s", weight));
                                     }
                                     else {
                                         weightOutput.setText("");
@@ -275,7 +487,6 @@ public class MainActivity extends AppCompatActivity {
                                     toastMessage("Number is too big");
                                     dialog.dismiss();
                                 }
-
                             }
                         });
                     }
@@ -299,9 +510,28 @@ public class MainActivity extends AppCompatActivity {
                     String name = spinner.getSelectedItem().toString();
                     int cups = Integer.parseInt(cupsSold.getText().toString());
                     double weight = Double.parseDouble(weightOutput.getText().toString());
-                    String dbTime = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(now);
-                    listData.add(0, new CoffeeElement(setDate(), cups, weight, name));
-                    AddData(setDate(), cups, weight, name);
+//                    String dbTime = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(now);
+                    SimpleDateFormat simpledateformat = new SimpleDateFormat("EEEE");
+                    String day;
+                    String month;
+                    if (datePicker.getDayOfMonth() < 10) {
+                        day = "0" + datePicker.getDayOfMonth();
+                    }
+                    else {
+                        day = String.valueOf(datePicker.getDayOfMonth());
+                    }
+
+                    if (datePicker.getMonth() < 10) {
+                        month = "0" + (datePicker.getMonth()+1);
+                    }
+                    else {
+                        month = String.valueOf((datePicker.getMonth() + 1));
+                    }
+                    Date date = new Date(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth()-1);
+                    String dayOfWeek = simpledateformat.format(date);
+                    String entryDate = (dayOfWeek + ", " + month +"-"+day+"-"+datePicker.getYear());
+                    listData.add(0, new CoffeeElement(entryDate, cups, weight, name));
+                    AddData(entryDate, cups, weight, name);
                     adapter.notifyDataSetChanged();
                     dialog.dismiss();
                 }
@@ -450,6 +680,7 @@ public class MainActivity extends AppCompatActivity {
     public void todayEntry() {
         ListView list = (ListView) findViewById(R.id.coffeeListView);
         list.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
 
         Cursor data = mDatabasehelper.getData();
         if (data.getCount() == 0) {
@@ -457,29 +688,16 @@ public class MainActivity extends AppCompatActivity {
         }
         TextView date = findViewById(R.id.date);
         String dateStr = date.getText().toString();
-        StringBuffer buffer = new StringBuffer();
         while (data.moveToNext()) {
             Log.d(TAG, "OBJECT: "+ data.getString(1));
             Log.d(TAG, "DATE: " + dateStr);
+            Log.d(TAG, "" + data.getString(1).equals(dateStr));
             if (data.getString(1).equals(dateStr)) {
                 listData.add(0, new CoffeeElement(data.getString(1), Integer.parseInt(data.getString(2)),
                         Double.parseDouble(data.getString(3)), data.getString(4)));
             }
-            else {
-                continue;
-            }
         }
-        adapter.notifyDataSetChanged();
     }
-
-    public void display(String title, String message){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(true);
-        builder.setTitle(title);
-        builder.setMessage(message);
-        builder.show();
-    }
-
 
     public void AddData(String date, int cups_sold, double weight, String name) {
         boolean insertData = mDatabasehelper.addCoffeeType(date, cups_sold, weight, name);
@@ -522,8 +740,8 @@ public class MainActivity extends AppCompatActivity {
         String time = new SimpleDateFormat("MM-dd-yyyy", Locale.US).format(now);
         String dbTime = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(now);
         TextView textView = (TextView) findViewById(R.id.date);
-        textView.setText(day +",  " + time);
-        return day +",  " + time;
+        textView.setText(day +", " + time);
+        return day +", " + time;
     }
 
 }

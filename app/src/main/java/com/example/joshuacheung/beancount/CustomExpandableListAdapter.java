@@ -1,5 +1,7 @@
 package com.example.joshuacheung.beancount;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.SortedMap;
@@ -15,11 +17,11 @@ import android.widget.TextView;
 public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
 
     private Context context;
-    private List<String> expandableListTitle;
-    private SortedMap<String, List<CoffeeElement>> expandableListDetail;
+    private List<Date> expandableListTitle;
+    private SortedMap<Date, List<CoffeeElement>> expandableListDetail;
 
-    public CustomExpandableListAdapter(Context context, List<String> expandableListTitle,
-                                       SortedMap<String, List<CoffeeElement>> expandableListDetail) {
+    public CustomExpandableListAdapter(Context context, List<Date> expandableListTitle,
+                                       SortedMap<Date, List<CoffeeElement>> expandableListDetail) {
         this.context = context;
         this.expandableListTitle = expandableListTitle;
         this.expandableListDetail = expandableListDetail;
@@ -82,7 +84,7 @@ public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
     @Override
     public View getGroupView(int listPosition, boolean isExpanded,
                              View convertView, ViewGroup parent) {
-        String listTitle = (String) getGroup(listPosition);
+        Date listTitle = (Date) getGroup(listPosition);
         if (convertView == null) {
             LayoutInflater layoutInflater = (LayoutInflater) this.context.
                     getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -91,7 +93,9 @@ public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
         TextView listTitleTextView = (TextView) convertView
                 .findViewById(R.id.listTitle);
         listTitleTextView.setTypeface(null, Typeface.BOLD);
-        listTitleTextView.setText(listTitle);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MM-dd-yyyy");
+        String display  = dateFormat.format(listTitle);
+        listTitleTextView.setText(display);
         return convertView;
     }
 

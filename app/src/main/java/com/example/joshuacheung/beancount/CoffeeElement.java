@@ -3,6 +3,11 @@ package com.example.joshuacheung.beancount;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Comparator;
+import java.util.Date;
+
 public class CoffeeElement implements Parcelable{
     private String name;
     private String date;
@@ -33,6 +38,27 @@ public class CoffeeElement implements Parcelable{
         cupsSold = in.readInt();
         weight = in.readDouble();
         name = in.readString();
+    }
+
+    public static Comparator<CoffeeElement> DateComparison = new Comparator<CoffeeElement>() {
+
+        public int compare(CoffeeElement d1, CoffeeElement d2) {
+            SimpleDateFormat format = new SimpleDateFormat("EEEE, MM-dd-yyyy");
+            Date date1 = null;
+            Date date2 = null;
+            try {
+                date1 = format.parse(d1.getDate());
+                date2 = format.parse(d2.getDate());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+//          descending order
+            return date2.compareTo(date1);
+        }
+    };
+
+    public String toString() {
+        return getName() + ", " + getDate() + ", " + getCupsSold() + ", " + getWeight();
     }
 
     public static final Creator<CoffeeElement> CREATOR = new Creator<CoffeeElement>() {

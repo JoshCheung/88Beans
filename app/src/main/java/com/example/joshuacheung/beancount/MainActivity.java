@@ -58,12 +58,14 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -132,15 +134,15 @@ public class MainActivity extends AppCompatActivity {
                     dialog.setContentView(R.layout.edit_or_delete_instance);
                     Button update = dialog.findViewById(R.id.update);
                     Button delete = dialog.findViewById(R.id.delete);
-                    Spinner spinner = (Spinner) dialog.findViewById(R.id.spinner);
-                    final DatePicker datePicker = (DatePicker) dialog.findViewById(R.id.Datepick);
+                    Spinner spinner = dialog.findViewById(R.id.spinner);
+                    final DatePicker datePicker = dialog.findViewById(R.id.Datepick);
                     ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(
                             MainActivity.this, R.layout.spinner_item, mNames);
                     myAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                     spinner.setAdapter(myAdapter);
                     spinner.setSelection(mNames.indexOf(listData.get(position).getName()));
 
-                    EditText cups = (EditText) dialog.findViewById(R.id.cups_served);
+                    EditText cups = dialog.findViewById(R.id.cups_served);
                     cups.setText(String.valueOf(listData.get(position).getCupsSold()));
 
                     SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MM-dd-yyyy");
@@ -344,12 +346,78 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    public void weekAverages() {
-        HashMap<String, Double> weekdayTotals = new HashMap<>();
-        HashMap<String, Double> weekendTotals = new HashMap<>();
+//    public void weekAverages() {
+//        HashMap<String, Double> weekdayTotals = new HashMap<>();
+//        HashMap<String, Double> weekendTotals = new HashMap<>();
+//
+//        HashMap<String, Integer> weekendCounter = new HashMap<>();
+//        HashMap<String, Integer> weekdayCounter = new HashMap<>();
+//
+//        ArrayList<Averages> smallData = new ArrayList<>();
+//
+//        Cursor data = mDatabasehelper.getData();
+//
+//        if (data.getCount() == 0) {
+//            return;
+//        }
+//        while (data.moveToNext()) {
+//            String name = data.getString(4);
+//            String date = data.getString(1);
+//            double weight = Double.parseDouble(data.getString(3));
+//
+//            if (date.indexOf("Saturday") >= 0 || date.indexOf("Sunday") >= 0) {
+//                if (!weekendTotals.containsKey(name)) {
+//                    weekendTotals.put(name, weight);
+//                    weekendCounter.put(name, 1);
+//                }
+//                else {
+//                    weekendTotals.put(name, weekendTotals.get(name) + weight);
+//                    weekendCounter.put(name, weekendCounter.get(name) + 1);
+//                }
+//            }
+//            else {
+//                if (!weekdayTotals.containsKey(name)) {
+//                    weekdayTotals.put(name, weight);
+//                    weekdayCounter.put(name, 1);
+//                }
+//                else {
+//                    weekdayTotals.put(name, weekdayTotals.get(name) + weight);
+//                    weekdayCounter.put(name, weekdayCounter.get(name) + 1);
+//                }
+//            }
+//        }
+//
+//
+//
+////        try {
+////            if (!weekdayTotals.isEmpty()) {
+////                Set<String> keys = weekdayTotals.keySet();
+////                if (!weekendTotals.isEmpty()) {
+////                    for (String key : weekendTotals.keySet()) {
+////                        keys.add(key);
+////                    }
+////                    for (String key : keys) {
+////                        smallData.add(new Averages(key, (weekdayTotals.get(key)/(weekdayCounter.get(key)/5)), (weekendTotals.get(key))/(weekendCounter.get(key)/2)));
+////                    }
+////                }
+////            }
+////        }
+////        catch (Exception e){
+////
+////        }
+//
+//
+//        AverageAdapter adapter = new AverageAdapter(this, smallData);
+//        ListView averages = findViewById(R.id.small_data);
+//        averages.setAdapter(adapter);
+//    }
 
-        HashMap<String, Integer> weekendCounter = new HashMap<>();
-        HashMap<String, Integer> weekdayCounter = new HashMap<>();
+    public void weekAverages() {
+
+        // Name of the coffee and double the weight
+        HashMap<String, HashMap<String, Double>> weekTotals = new HashMap<>();
+        int weekends = 0;
+        int weekdays = 0;
 
         ArrayList<Averages> smallData = new ArrayList<>();
 
@@ -359,38 +427,45 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         while (data.moveToNext()) {
+
             String name = data.getString(4);
             String date = data.getString(1);
             double weight = Double.parseDouble(data.getString(3));
 
-            if (date.indexOf("Saturday") >= 0 || date.indexOf("Sunday") >= 0) {
-                if (!weekendTotals.containsKey(name)) {
-                    weekendTotals.put(name, weight);
-                    weekendCounter.put(name, 1);
-                }
-                else {
-                    weekendTotals.put(name, weekendTotals.get(name) + weight);
-                    weekendCounter.put(name, weekendCounter.get(name) + 1);
-                }
+            if (!weekTotals.containsKey(name)) {
+                weekTotals.put(name, new HashMap<String, Double>());
+                weekTotals.get(name).put("weekday", 0.0);
+                weekTotals.get(name).put("weekend", 0.0);
+            }
+            if (date.substring(0, date.indexOf(",")).equals("Saturday") || date.substring(0, date.indexOf(",")).equals("Sunday")) {
+                weekTotals.get(name).put("weekend", weekTotals.get(name).get("weekend") + weight);
+                weekends++;
             }
             else {
-                if (!weekdayTotals.containsKey(name)) {
-                    weekdayTotals.put(name, weight);
-                    weekdayCounter.put(name, 1);
-                }
-                else {
-                    weekdayTotals.put(name, weekdayTotals.get(name) + weight);
-                    weekdayCounter.put(name, weekdayCounter.get(name) + 1);
-                }
+                weekTotals.get(name).put("weekday", weekTotals.get(name).get("weekday") + weight);
+                weekdays++;
             }
         }
 
-        for (String key : weekendTotals.keySet()) {
-            smallData.add(new Averages(key, weekdayTotals.get(key)/(weekdayCounter.get(key)/5), (weekendTotals.get(key))/(weekendCounter.get(key)/2)));
+        for (String key: weekTotals.keySet() ) {
+            double avgWeekday = 0.0;
+            double avgWeekend = 0.0;
+            if (weekdays >= 5) {
+                avgWeekday = weekTotals.get(key).get("weekday")/ (weekdays/5);
+            }
+            else {
+                avgWeekday = weekTotals.get(key).get("weekday")/weekdays;
+            }
+            if (weekends >= 2) {
+                avgWeekend = weekTotals.get(key).get("weekend")/ (weekends/2);
+            }
+            else {
+                avgWeekday = weekTotals.get(key).get("weekend")/weekends;
+            }
+            smallData.add(new Averages(key, avgWeekday, avgWeekend));
         }
-
         AverageAdapter adapter = new AverageAdapter(this, smallData);
-        ListView averages = (ListView) findViewById(R.id.small_data);
+        ListView averages = findViewById(R.id.small_data);
         averages.setAdapter(adapter);
     }
 
@@ -408,14 +483,14 @@ public class MainActivity extends AppCompatActivity {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.averages_entry, parent, false);
             }
             // Lookup view for data population
-            TextView tvName = (TextView) convertView.findViewById(R.id.name);
-            TextView weekdayaverageTV = (TextView) convertView.findViewById(R.id.weekday_average);
-            TextView weekendaverageTV = (TextView) convertView.findViewById(R.id.weekend_average);
+            TextView tvName = convertView.findViewById(R.id.name);
+            TextView weekdayaverageTV = convertView.findViewById(R.id.weekday_average);
+            TextView weekendaverageTV = convertView.findViewById(R.id.weekend_average);
 
             // Populate the data into the template view using the data object
             tvName.setText(average.getName());
-            weekdayaverageTV.setText(String.format("%.2f lb", average.getWeekdayAverage()/5));
-            weekendaverageTV.setText(String.format("%.2f lb", average.getWeekendAverage()/2));
+            weekdayaverageTV.setText(String.format("%.2f lb", average.getWeekdayAverage()));
+            weekendaverageTV.setText(String.format("%.2f lb", average.getWeekendAverage()));
             // Return the completed view to render on screen
             return convertView;
         }
@@ -444,8 +519,8 @@ public class MainActivity extends AppCompatActivity {
         final Dialog dialog = new Dialog(MainActivity.this);
         dialog.setContentView(R.layout.add_bean_type);
 
-        Spinner spinner = (Spinner) dialog.findViewById(R.id.spinner);
-        final DatePicker datePicker = (DatePicker) dialog.findViewById(R.id.Datepick);
+        Spinner spinner = dialog.findViewById(R.id.spinner);
+        final DatePicker datePicker = dialog.findViewById(R.id.Datepick);
         ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(
                 MainActivity.this, R.layout.spinner_item, mNames);
         myAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -530,8 +605,10 @@ public class MainActivity extends AppCompatActivity {
                     Date date = new Date(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth()-1);
                     String dayOfWeek = simpledateformat.format(date);
                     String entryDate = (dayOfWeek + ", " + month +"-"+day+"-"+datePicker.getYear());
-                    listData.add(0, new CoffeeElement(entryDate, cups, weight, name));
-                    AddData(entryDate, cups, weight, name);
+                    if (checkIsValid(entryDate, name)) {
+                        listData.add(0, new CoffeeElement(entryDate, cups, weight, name));
+                        AddData(entryDate, cups, weight, name);
+                    }
                     adapter.notifyDataSetChanged();
                     dialog.dismiss();
                 }
@@ -554,6 +631,16 @@ public class MainActivity extends AppCompatActivity {
             return "0" + df.format(weight);
         }
         return df.format(weight);
+    }
+
+    public boolean checkIsValid(String date, String name) {
+        for (CoffeeElement element: listData) {
+            if (element.getDate().equals(date) && element.getName().equals(name)) {
+                toastMessage("Entry for the day already exists");
+                return false;
+            }
+        }
+        return true;
     }
 
     public void pushSomeData() {
@@ -678,7 +765,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void todayEntry() {
-        ListView list = (ListView) findViewById(R.id.coffeeListView);
+        ListView list = findViewById(R.id.coffeeListView);
         list.setAdapter(adapter);
         adapter.notifyDataSetChanged();
 
@@ -739,7 +826,7 @@ public class MainActivity extends AppCompatActivity {
         String day = sdf2.format(new Date());
         String time = new SimpleDateFormat("MM-dd-yyyy", Locale.US).format(now);
         String dbTime = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(now);
-        TextView textView = (TextView) findViewById(R.id.date);
+        TextView textView = findViewById(R.id.date);
         textView.setText(day +", " + time);
         return day +", " + time;
     }

@@ -267,9 +267,16 @@ public class DataListing extends AppCompatActivity {
                                     int cups_sold = Integer.parseInt(cups.getText().toString());
                                     String newName = spinner.getSelectedItem().toString();
                                     double weight = Double.parseDouble(weightOutput.getText().toString());
-                                    mDatabasehelper.updateItem(itemID, oldName, entryDate, cups_sold, weight, newName);
-                                    expandableListDetail.get(expandableListTitle.get(groupPosition))
-                                            .set(position, new CoffeeElement(entryDate, cups_sold, weight, newName));
+
+                                    if (checkExpandableIsValid(entryDate, newName)) {
+                                        mDatabasehelper.updateItem(itemID, oldName, entryDate, cups_sold, weight, newName);
+                                        expandableListDetail.get(expandableListTitle.get(groupPosition))
+                                                .set(position, new CoffeeElement(entryDate, cups_sold, weight, newName));
+                                    }
+                                    else {
+                                        toastMessage("Entry for this Date and Type already exists");
+                                    }
+
                                 } else {
                                     toastMessage("No ID associated with that name");
                                 }
@@ -318,6 +325,28 @@ public class DataListing extends AppCompatActivity {
         catch (Exception e) {
             toastMessage("No Data Available");
         }
+    }
+
+    public boolean checkExpandableIsValid(String date, String name) {
+        Cursor data = mDatabasehelper.getData();
+
+        while (data.moveToNext()) {
+            if (data.getString(1).equals(date) && data.getString(4).equals(name)) {
+                toastMessage("Entry for the day already exists");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean checkIsValid(String date, String name, ArrayList<CoffeeElement> list) {
+        for (CoffeeElement element: list) {
+            if (element.getDate().equals(date) && element.getName().equals(name)) {
+                toastMessage("Entry for the day already exists");
+                return false;
+            }
+        }
+        return true;
     }
 
     public SortedMap<Date, List<CoffeeElement>> getData() throws Exception {
@@ -512,8 +541,12 @@ public class DataListing extends AppCompatActivity {
                                 int cups_sold = Integer.parseInt(cups.getText().toString());
                                 String newName = spinner.getSelectedItem().toString();
                                 double weight = Double.parseDouble(weightOutput.getText().toString());
-                                mDatabasehelper.updateItem(itemID, oldName, entryDate, cups_sold, weight, newName);
-                                dataList.set(position, new CoffeeElement(entryDate, cups_sold, weight, newName));
+
+                                if (checkIsValid(entryDate, newName, dataList)) {
+                                    mDatabasehelper.updateItem(itemID, oldName, entryDate, cups_sold, weight, newName);
+                                    dataList.set(position, new CoffeeElement(entryDate, cups_sold, weight, newName));
+                                }
+
                                 adapter.notifyDataSetChanged();
                             } else {
                                 toastMessage("No ID associated with that name");

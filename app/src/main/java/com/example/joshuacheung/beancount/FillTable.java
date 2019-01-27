@@ -97,10 +97,17 @@ public class FillTable extends AppCompatActivity {
         public static Comparator<DateWeightPair> DateComparison = new Comparator<DateWeightPair>() {
 
             public int compare(DateWeightPair d1, DateWeightPair d2) {
-                String date1 = d1.getDate().toUpperCase();
-                String date2 = d2.getDate().toUpperCase();
+                Date date1 = null;
+                Date date2 = null;
+                try {
+                    date1 = new SimpleDateFormat("EEEE, MM-dd-yyyy").parse(d1.getDate());
+                    date2 = new SimpleDateFormat("EEEE, MM-dd-yyyy").parse(d2.getDate());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
 
 //              descending order
+//                System.out.println("date1: " + date1.toString() + ", Date 2: " + date2.toString());
                 return date2.compareTo(date1);
             }
         };
@@ -242,12 +249,14 @@ public class FillTable extends AppCompatActivity {
         series1 = new LineGraphSeries<>();
 
         ArrayList<DateWeightPair> pastMonth = getPastMonths(num);
-        Collections.reverse(pastMonth);
-//        try {
+        pastMonth.sort(DateWeightPair.DateComparison);
+        try {
             // Loop through and initialize all data points
             for (int i = pastMonth.size()-1; i >= 0 ; i--) {
-                String date = convertDisplayDateToLocalDate(pastMonth.get(i).getDate());
-                Date date1 = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+                String date = pastMonth.get(i).getDate();
+                Log.d(TAG, "Readable: " + date);
+                Date date1 = new SimpleDateFormat("EEEE, MM-dd-yyyy").parse(date);
+                Log.d(TAG, date1.getTime() + "");
                 series1.appendData(new DataPoint(date1.getTime(), pastMonth.get(i).getWeight()), true, 31 * Math.abs(num));
             }
 
@@ -293,10 +302,10 @@ public class FillTable extends AppCompatActivity {
                 }
             });
             graph.addSeries(series1);
-//        }
-//        catch (Exception e) {
-//            toastMessage("No Data available");
-//        }
+        }
+        catch (Exception e) {
+            toastMessage("No Data available");
+        }
     }
 
 
